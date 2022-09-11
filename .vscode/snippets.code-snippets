@@ -1,0 +1,24 @@
+{
+	// Project's custom snippets
+
+	// Snippet for locator creation
+	"newLocator": {
+		"prefix": "get",
+		"body": "get ${1:yourLocatorName}() { return $('${0}'); }",
+		"description": "Creates a getter property inside a class in ES6 syntax"
+	},
+	
+	// Snippet for new test case creation (it)
+	"newTestCase": {
+		"prefix": "newTC",
+		"body": "it('${2:yourTestCaseName}', async () => {\n\t${0:content}\n\t});",
+		"description": "New test case Mocha template"
+	},
+
+	// Snippet for new test suite creation (describe)
+	"newTestSuite": {
+		"prefix": "newTS",
+		"body": "describe('${1:yourTestSuiteName}', () => {\n\tit('${2:yourTestCaseName}', async () => {\n\t${0:content}\n\t});\n});",
+		"description": "New test suite Mocha template"
+	}
+ }

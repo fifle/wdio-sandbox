@@ -1,0 +1,37 @@
+stages:
+  - build
+  - test_staging
+
+build:
+  stage: build
+  script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+    - docker build -t ${CI_REGISTRY_IMAGE}:latest -f Dockerfile .
+    - docker push ${CI_REGISTRY_IMAGE}:latest
+  rules:
+    - changes:
+        - Dockerfile
+
+test_staging:
+  when: always
+  only:
+    refs:
+      - main
+      - schedules
+#    variables:
+#      - $STAGING_WEBDRIVERIO == "true"
+  stage: test_staging
+  before_script:
+    - ssh -t -o StrictHostKeyChecking=no ${HOST} "git pull && composer install --no-interaction && npm ci && npm run build:prod  && ./console migrate --interactive=0 && ./console discount-module migrations:migrate -n && ./console discount-module orm:clear-cache:metadata && ./console discount-module orm:clear-cache:query && ./console discount-module orm:generate-proxies && composer dump-autoload"
+    - screen -S tests_webdriverio -d -m /home/gitlab-runner/LT --user ${LT_USER} --key ${LT_KEY}
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+    - cp  docker-compose.example.yml docker-compose.yml
+    - echo "$secret_staging" >> .env.ci
+    - cp .env.ci .env
+    - docker run --rm  --entrypoint bash -v $PWD:/app  ${CI_REGISTRY_IMAGE} -c  "npm install ; chmod -R 777 node_modules"
+  script: 
+    - docker-compose run -u $(id -u):$(id -g) --entrypoint bash  --rm tests -c "npm run lambda-chrome"
+  after_script:
+    - screen -XS tests_webdriverio quit
+  timeout: 30 min
+

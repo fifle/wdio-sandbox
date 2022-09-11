@@ -1,0 +1,9 @@
+version: "3.7"
+
+services:
+  tests:
+    image: //image url should be here
+    volumes:
+      - .:/app
+    entrypoint: ["tail", "-f", "/dev/null"]
+  
